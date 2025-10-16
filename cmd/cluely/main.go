@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 
 	"cluely/internal/agent"
@@ -15,7 +16,15 @@ func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	log.Println("🚀 Starting Cluely Agent...")
 
-	cfg, err := config.Load("default.toml")
+	// Try to find config file
+	configPath := findConfigFile()
+	if configPath == "" {
+		log.Fatalf("❌ Failed to find config file (checked: default.toml, ./configs/default.toml)")
+	}
+
+	log.Printf("📋 Loading config from: %s", configPath)
+
+	cfg, err := config.Load(configPath)
 	if err != nil {
 		log.Fatalf("❌ Failed to load config: %v", err)
 	}
@@ -41,4 +50,22 @@ func main() {
 
 	agentInstance.Stop()
 	log.Println("👋 Goodbye!")
+}
+
+// findConfigFile searches for the config file in multiple locations
+func findConfigFile() string {
+	// Possible locations to search
+	possiblePaths := []string{
+		"default.toml",                     // Current directory
+		"configs/default.toml",             // Configs subdirectory
+		filepath.Join(".", "default.toml"), // Explicit current dir
+	}
+
+	for _, path := range possiblePaths {
+		if _, err := os.Stat(path); err == nil {
+			return path
+		}
+	}
+
+	return ""
 }

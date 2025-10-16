@@ -2,25 +2,26 @@ package audio
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
 	"cluely/internal/config"
 )
 
+// Module управляет захватом и транскрипцией аудио
 type Module struct {
-	cfg            config.AudioConfig
-	transcriptChan chan string
-	transcriber    Transcriber
-	stopChan       chan struct{}
+	cfg         config.AudioConfig
+	transcriber Transcriber
+	transcripts chan string
+	stopCh      chan struct{}
+	isRunning   bool
 }
 
 func NewModule(cfg config.AudioConfig) *Module {
 	return &Module{
-		cfg:            cfg,
-		transcriptChan: make(chan string, 10),
-		stopChan:       make(chan struct{}),
+		cfg:         cfg,
+		transcripts: make(chan string, 10),
+		stopCh:      make(chan struct{}),
 	}
 }
 
@@ -30,65 +31,65 @@ func (m *Module) Start(ctx context.Context) error {
 		return nil
 	}
 
-	// Создаем транскрайбер
+	// Создаем транскрибер на основе конфига
 	transcriber, err := NewTranscriber(m.cfg.TranscriberType, m.cfg.TranscriberConfig)
 	if err != nil {
-		return fmt.Errorf("failed to create transcriber: %w", err)
+		return err
 	}
 
 	if err := transcriber.Initialize(); err != nil {
-		return fmt.Errorf("failed to initialize transcriber: %w", err)
+		return err
 	}
 
 	m.transcriber = transcriber
-	log.Printf("✅ Transcriber initialized: %s", m.cfg.TranscriberType)
+	m.isRunning = true
 
-	// Пока симулируем захват аудио
-	go m.simulateCaptureLoop(ctx)
+	// Запускаем горутину для симуляции аудиоввода (в mock режиме)
+	go m.simulateAudioCapture(ctx)
 
+	log.Printf("✅ Audio Module started (transcriber: %s)", m.cfg.TranscriberType)
 	return nil
 }
 
-func (m *Module) simulateCaptureLoop(ctx context.Context) {
-	log.Println("🎙️  Audio capture simulation started")
-	ticker := time.NewTicker(10 * time.Second)
+func (m *Module) simulateAudioCapture(ctx context.Context) {
+	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
 
-	testPhrases := []string{
-		"У нас проблема с продакшн сервером",
-		"Нужно откатиться на предыдущую версию",
-		"Проверьте логи в Grafana",
-		"CPU использование выше 90 процентов",
-	}
-
-	i := 0
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case <-m.stopChan:
+		case <-m.stopCh:
 			return
 		case <-ticker.C:
-			// Симулируем транскрипцию
-			phrase := testPhrases[i%len(testPhrases)]
-			i++
-
-			log.Printf("🎙️  Simulated audio: %s", phrase)
-			m.transcriptChan <- phrase
+			// Симулируем захват аудио
+			if transcript, err := m.transcriber.Transcribe(ctx, nil); err == nil && transcript != "" {
+				select {
+				case m.transcripts <- transcript:
+				case <-ctx.Done():
+					return
+				}
+			}
 		}
 	}
 }
 
 func (m *Module) TranscriptChannel() <-chan string {
-	return m.transcriptChan
+	return m.transcripts
 }
 
 func (m *Module) Stop() {
-	close(m.stopChan)
+	if !m.isRunning {
+		return
+	}
+
+	m.isRunning = false
+	close(m.stopCh)
 
 	if m.transcriber != nil {
 		m.transcriber.Close()
 	}
 
-	close(m.transcriptChan)
+	close(m.transcripts)
+	log.Println("🛑 Audio Module stopped")
 }

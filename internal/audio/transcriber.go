@@ -14,11 +14,9 @@ type Transcriber interface {
 func NewTranscriber(transcriberType string, config map[string]string) (Transcriber, error) {
 	switch transcriberType {
 	case "azure":
-		return NewAzureTranscriber(
-			config["subscription_key"],
-			config["region"],
-			config["language"],
-		), nil
+		// TODO: Implement Azure Speech Services
+		// For now, fallback to mock
+		return NewMockTranscriber(), nil
 	case "mock":
 		return NewMockTranscriber(), nil
 	default:

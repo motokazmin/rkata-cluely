@@ -73,6 +73,7 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
 	html := `<!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <title>Cluely - AI Assistant</title>
     <style>
         body { 

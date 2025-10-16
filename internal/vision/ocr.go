@@ -14,7 +14,9 @@ type OCREngine interface {
 func NewOCREngine(engineType string, config map[string]string) (OCREngine, error) {
 	switch engineType {
 	case "tesseract":
-		return NewTesseractOCR(config["language"]), nil
+		// TODO: Implement Tesseract OCR
+		// For now, fallback to mock
+		return NewMockOCR(), nil
 	case "mock":
 		return NewMockOCR(), nil
 	default:
