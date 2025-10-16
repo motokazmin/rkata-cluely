@@ -1,0 +1,85 @@
+# ============================================
+# Cluely MVP Configuration
+# Mock Mode - No External Dependencies
+# ============================================
+
+# ============================================
+# Audio Module Configuration
+# ============================================
+[audio]
+enabled = true
+device_name = "VB-Audio Virtual Cable"
+sample_rate = 16000
+buffer_size = 1024
+silence_threshold = 0.02
+
+# Transcriber type: "mock", "azure", "vosk", "whisper"
+transcriber_type = "mock"
+
+# Transcriber-specific configuration (not used in mock mode)
+[audio.transcriber_config]
+# Azure Speech (when transcriber_type = "azure")
+# subscription_key = "YOUR_AZURE_KEY_HERE"
+# region = "westeurope"
+# language = "ru-RU"
+
+# Vosk (when transcriber_type = "vosk")
+# model_path = "models/vosk-model-ru-0.42"
+
+# Whisper (when transcriber_type = "whisper")
+# model_size = "base"
+# language = "ru"
+
+# ============================================
+# Vision Module Configuration
+# ============================================
+[vision]
+enabled = true
+monitored_apps = ["cmd.exe", "powershell.exe", "grafana", "JIRA"]
+hot_key = "Ctrl+Shift+S"
+
+# OCR engine: "mock", "tesseract", "paddle"
+ocr_engine = "mock"
+
+# OCR-specific configuration (not used in mock mode)
+[vision.ocr_config]
+# Tesseract (when ocr_engine = "tesseract")
+# language = "eng+rus"
+# psm = "6"
+
+# PaddleOCR (when ocr_engine = "paddle")
+# use_angle_cls = "true"
+# lang = "en"
+
+# ============================================
+# AI Module Configuration
+# ============================================
+[ai]
+# Provider: "mock", "ollama", "cloud"
+provider = "mock"
+
+# Ollama configuration (when provider = "ollama")
+ollama_url = "http://localhost:11434"
+model = "llama3.2:latest"
+
+# Cloud provider configuration (when provider = "cloud")
+# cloud_api_key = "YOUR_API_KEY"
+# cloud_provider = "openai"
+# cloud_model = "gpt-4"
+
+# Prompts directory
+prompt_dir = "prompts"
+
+# ============================================
+# UI Server Configuration
+# ============================================
+[ui]
+enabled = true
+port = 8080
+opacity = 0.9
+
+# Position: "top-left", "top-right", "bottom-left", "bottom-right"
+position = "top-right"
+
+# Maximum number of messages to display
+max_messages = 10
